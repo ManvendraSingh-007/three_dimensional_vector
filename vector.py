@@ -1,6 +1,9 @@
 import math
+from functools import total_ordering
 
+@total_ordering
 class Vector:
+    
     def __init__(self, x: float, y: float, z: float) -> None:
         """
         Initialize a Vector object with given x, y, and z coordinates.
@@ -653,21 +656,21 @@ class Vector:
         """
         return iter((self.x, self.y, self.z))
 
-    
-    def __ne__(self, other: 'Vector') -> bool:
+    def __lt__(self, other: 'Vector') -> bool:
         """
-        Check if two Vector objects are not equal.
+        Check if the current Vector object is less than another Vector object.
 
         This method compares the current Vector object with another Vector object
-        and returns True if they are not equal, and False otherwise.
+        and returns True if the current Vector object is less than the other Vector object,
+        and False otherwise.
 
         Parameters:
         other (Vector): The other Vector object to compare with the current Vector object.
 
         Returns:
-        bool: True if the current Vector object is not equal to the other Vector object, False otherwise.
+        bool: True if the current Vector object is less than the other Vector object, False otherwise.
         """
-        return not self.__eq__(other)
+        return self.magnitude() < other.magnitude()
 
     
     def __str__(self) -> str:
