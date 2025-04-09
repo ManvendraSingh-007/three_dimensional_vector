@@ -598,6 +598,7 @@ class Vector:
         
         return f"Vector({self.x:.{format_spec}f}, {self.y:.{format_spec}f}, {self.z:.{format_spec}f})"
         """
+        return f"Vector(x={self.x:{format_spec}}, y={self.y:{format_spec}}, z={self.z:{format_spec}})"
 
     def __getitem__(self, index: int) -> float:
         """
