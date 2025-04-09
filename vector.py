@@ -176,7 +176,10 @@ class Vector:
         Vector: A new vector that is the normalized version of the original vector.
         """
         magnitude = self.magnitude()
-        return Vector(self.x / magnitude, self.y / magnitude, self.z / magnitude)
+        try:
+            return Vector(self.x / magnitude, self.y / magnitude, self.z / magnitude)
+        except ZeroDivisionError:
+            raise ValueError("Cannot normalize a zero vector")
 
     
     def angle_between(self, other: 'Vector', degrees: bool = True) -> float:
@@ -193,10 +196,13 @@ class Vector:
         Returns:
         float: The angle between the current vector and the other vector, in degrees or radians depending on the `degrees` parameter.
         """
-        cos_theta = self.dot_product(other) / (self.magnitude() * other.magnitude())
-        cos_theta = min(max(cos_theta, -1), 1)
-        theta = math.acos(cos_theta)
-        return math.degrees(theta) if degrees else theta
+        if (self.magnitude() and other.magnitude()) != 0:
+            cos_theta = self.dot_product(other) / (self.magnitude() * other.magnitude())
+            cos_theta = min(max(cos_theta, -1), 1)
+            theta = math.acos(cos_theta)
+            return math.degrees(theta) if degrees else theta
+        else:
+            raise ValueError("Cannot calculate angle between zero vectors")
 
     
     def is_zero(self) -> bool:
@@ -528,7 +534,10 @@ class Vector:
         Returns:
         Vector: A new Vector object that is the result of dividing the current Vector object by the scalar.
         """
-        return self.__mul__(1 / scalar)
+        try:
+            return self.__mul__(1 / scalar)
+        except ZeroDivisionError:
+            raise ZeroDivisionError("Cannot divide by zero")
     
     def __eq__(self, other: 'Vector') -> bool:
         """
