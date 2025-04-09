@@ -110,6 +110,69 @@ class Vector:
     def invalidate_cache(self) -> None:
         self._magnitude = None # Invalidate the cache for the magnitude
 
+    @classmethod
+    def zero(cls) -> 'Vector':
+        """
+        Create and return a zero vector.
+
+        This class method returns a new Vector object with all its components (x, y, z) set to zero.
+        It's a convenient way to create a vector representing the origin point in 3D space.
+
+        Returns:
+        Vector: A new Vector object with x, y, and z components all set to zero.
+        """
+        return cls(0, 0, 0) # Return a zero vector
+
+    @classmethod
+    def unit(cls) -> 'Vector':
+        """
+        Create and return a unit vector.
+
+        This class method returns a new Vector object with all its components (x, y, z) set to one.
+        It's a convenient way to create a vector representing a direction in 3D space.
+
+        Returns:
+        Vector: A new Vector object with x, y, and z components all set to one.
+        """
+        return cls(1, 1, 1) # Return a unit vector
+    
+    @classmethod
+    def from_coordinates(cls, x: float, y: float, z: float) -> 'Vector':
+        """
+        Create and return a new Vector object from given x, y, and z coordinates.
+
+        Parameters:
+        x (float): The x-coordinate of the vector.
+        y (float): The y-coordinate of the vector.
+        z (float): The z-coordinate of the vector.
+
+        Returns:
+        Vector: A new Vector object with the given coordinates.
+        """     
+        return cls(x, y, z) # Return a new vector with given coordinates
+    
+    @classmethod
+    def from_tuple(cls, coordinates: tuple) -> 'Vector':
+        """
+        Create a new Vector object from a tuple of coordinates.
+
+        This class method takes a tuple containing three float values (x, y, z) and creates a new Vector object with those coordinates.
+
+        Parameters:
+        coordinates (tuple): A tuple containing three float values representing the x, y, and z coordinates of the new Vector object.
+
+        Returns:
+        Vector: A new Vector object with the provided coordinates.
+
+        Raises:
+        ValueError: If the tuple does not contain exactly three elements.
+        """
+
+        if len(coordinates) == 3:
+            return cls(*coordinates) # Return a new vector from given tuple of coordinates
+        else:
+            raise ValueError("Coordinates must be a tuple of length 3")
+
     def magnitude(self) -> float:
         """
         Calculate the magnitude (length) of the vector.
