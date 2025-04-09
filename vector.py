@@ -629,7 +629,14 @@ class Vector:
         Returns:
         None
         """
-        (self.x, self.y, self.z)[index] = value
+        if index ==0:
+            self.x = value
+        elif index == 1:
+            self.y = value
+        elif index == 2:
+            self.z = value
+        else:
+            raise IndexError("Index out of range")
 
 
     def __len__(self) -> int:
