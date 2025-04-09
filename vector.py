@@ -16,9 +16,9 @@ class Vector:
         Returns:
         None: The function does not return any value. It initializes the Vector object.
         """
-        self._x = x
-        self._y = y
-        self._z = z
+        self.__x = x
+        self.__y = y
+        self.__z = z
         self._magnitude = None
 
     @property
@@ -29,7 +29,7 @@ class Vector:
         Returns:
         float: The x-coordinate of the vector.
         """
-        return self._x
+        return self.__x
     
     @x.setter
     def x(self, x: float) -> None:
@@ -44,10 +44,10 @@ class Vector:
 
         Returns:
         None
-    """
-
-        self._x = x
-        self._magnitude = (self.x ** 2 + self.y ** 2 + self.z ** 2) ** 0.5
+        """
+        if self.__x != x: # Only update magnitude if the x-coordinate has changed
+            self.__x = x
+            self.invalidate_cache() # Invalidate the cache for the magnitude
 
     @property
     def y(self) -> float:
@@ -58,7 +58,7 @@ class Vector:
         float: The y-coordinate of the vector.
         """
 
-        return self._y
+        return self.__y
     
     @y.setter
     def y(self, y: float) -> None:
@@ -74,9 +74,9 @@ class Vector:
         Returns:
         None
         """
-
-        self._y = y
-        self._magnitude = (self.x ** 2 + self.y ** 2 + self.z ** 2) ** 0.5
+        if self.__y != y: # Only update magnitude if the y-coordinate has changed
+            self.__y = y
+            self.invalidate_cache() # Invalidate the cache for the magnitude
 
     @property
     def z(self) -> float:
@@ -86,7 +86,7 @@ class Vector:
         Returns:
         float: The z-coordinate of the vector.
         """
-        return self._z
+        return self.__z
     
     @z.setter
     def z(self, z: float) -> None:
@@ -103,8 +103,12 @@ class Vector:
         None
         """
         
-        self._z = z
-        self._magnitude = (self.x ** 2 + self.y ** 2 + self.z ** 2) ** 0.5
+        if self.__z != z: # Only update magnitude if the z-coordinate has changed
+            self.__z = z
+            self.invalidate_cache() # Invalidate the cache for the magnitude
+
+    def invalidate_cache(self) -> None:
+        self._magnitude = None # Invalidate the cache for the magnitude
 
     def magnitude(self) -> float:
         """
