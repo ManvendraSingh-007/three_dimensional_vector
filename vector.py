@@ -13,10 +13,95 @@ class Vector:
         Returns:
         None: The function does not return any value. It initializes the Vector object.
         """
-        self.x = x
-        self.y = y
-        self.z = z
+        self._x = x
+        self._y = y
+        self._z = z
+        self._magnitude = None
 
+    @property
+    def x(self) -> float:
+        """
+        Get the x-coordinate of the vector.
+
+        Returns:
+        float: The x-coordinate of the vector.
+        """
+        return self._x
+    
+    @x.setter
+    def x(self, x: float) -> None:
+        """
+        Set the x-coordinate of the vector and update its magnitude.
+
+        This setter method assigns a new value to the x-coordinate of the vector
+        and recalculates the vector's magnitude.
+
+        Parameters:
+        x (float): The new x-coordinate of the vector.
+
+        Returns:
+        None
+    """
+
+        self._x = x
+        self._magnitude = (self.x ** 2 + self.y ** 2 + self.z ** 2) ** 0.5
+
+    @property
+    def y(self) -> float:
+        """
+        Get the y-coordinate of the vector.
+
+        Returns:
+        float: The y-coordinate of the vector.
+        """
+
+        return self._y
+    
+    @y.setter
+    def y(self, y: float) -> None:
+        """
+        Set the y-coordinate of the vector and update its magnitude.
+
+        This setter method assigns a new value to the y-coordinate of the vector
+        and recalculates the vector's magnitude.
+
+        Parameters:
+        y (float): The new y-coordinate of the vector.
+
+        Returns:
+        None
+        """
+
+        self._y = y
+        self._magnitude = (self.x ** 2 + self.y ** 2 + self.z ** 2) ** 0.5
+
+    @property
+    def z(self) -> float:
+        """
+        Get the z-coordinate of the vector.
+
+        Returns:
+        float: The z-coordinate of the vector.
+        """
+        return self._z
+    
+    @z.setter
+    def z(self, z: float) -> None:
+        """
+        Set the z-coordinate of the vector and update its magnitude.
+
+        This setter method assigns a new value to the z-coordinate of the vector
+        and recalculates the vector's magnitude.
+
+        Parameters:
+        z (float): The new z-coordinate of the vector.
+
+        Returns:
+        None
+        """
+        
+        self._z = z
+        self._magnitude = (self.x ** 2 + self.y ** 2 + self.z ** 2) ** 0.5
 
     def magnitude(self) -> float:
         """
@@ -31,7 +116,12 @@ class Vector:
         Returns:
         float: The magnitude of the vector.
         """
-        return (self.x ** 2 + self.y ** 2 + self.z ** 2) ** 0.5
+        
+        if self._magnitude == None: # Calculate magnitude if not already calculated
+            self._magnitude = (self.x ** 2 + self.y ** 2 + self.z ** 2) ** 0.5
+
+        return self._magnitude # Return magnitude
+        
 
     
     def cross_product(self, other: 'Vector') -> 'Vector':
