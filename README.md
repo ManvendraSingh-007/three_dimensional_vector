@@ -16,7 +16,7 @@ This project is currently in active development. While the core functionality is
 - More advanced vector operations
 - Better integration with scientific Python ecosystems
 
-**We welcome contributions!** See the [Contributing](https://github.com/ManvendraSingh-007/vector/edit/master/README.md#contributing) section below.
+**We welcome contributions!** See the [Contributing](https://github.com/ManvendraSingh-007/vector/blob/master/Contributing.md) section below.
 
 ## Features
 
