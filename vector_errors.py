@@ -8,10 +8,15 @@ can manage and extend error handling consistently and clearly throughout the cod
 
 Classes:
     - VectorError: Base class for all vector-related exceptions.
-    - DimensionMismatchError: Raised when operations are attempted on vectors of different dimensions.
-    - ZeroVectorError: Raised when operations that require non-zero vectors are attempted on zero vectors.
-    - IndexError: Raised when attempting to access a vector component with an invalid index.
-    - InvalidOperationError: Raised when an unsupported operation is attempted on vectors.
+    - ZeroVectorError: Raised when an operation cannot be performed on a zero vector
+    - VectorDimensionError: Raised when operations are attempted on vectors of different dimensions
+    - VectorOperationError: Raised when an invalid vector operation is attempted
+    - VectorNormalizationError: Raised when vector normalization fails
+    - VectorAngleError: Raised when angle calculation between vectors fails
+    - VectorIndexError: Raised when an invalid vector index is accessed
+    - VectorDivisionError: Raised when attempting to divide a vector by zero
+    - VectorTypeError: Raised when an operation is performed with incompatible types
+    - VectorInputError: Raised when invalid input is provided for vector creation
 
 Usage:
     To use these exceptions, import them into your vector module and raise them as needed when handling errors
@@ -19,24 +24,53 @@ Usage:
 """
 
 class VectorError(Exception):
-    """Base class for all vector-related exceptions."""
+    """Base class for all vector-related errors"""
     pass
-
-class DimensionMismatchError(VectorError):
-    """Raised when operations are attempted on vectors of different dimensions."""
-    def __init__(self, message="Dimension mismatch"):
-        super().__init__(message)
-        
 
 class ZeroVectorError(VectorError):
-    """Raised when operations that require non-zero vectors are attempted on zero vectors."""
-    pass
+    """Raised when an operation cannot be performed on a zero vector"""
+    def __init__(self, operation: str):
+        super().__init__(f"Cannot {operation} a zero vector")
 
-class IndexError(VectorError):
-    """Raised when attempting to access a vector component with an invalid index."""
-    pass
+class VectorDimensionError(VectorError):
+    """Raised when vector dimensions are incorrect"""
+    def __init__(self, expected: int, actual: int):
+        super().__init__(f"Expected {expected} dimensions, got {actual}")
 
-class InvalidOperationError(VectorError):
-    """Raised when an unsupported operation is attempted on vectors."""
-    pass
+class VectorOperationError(VectorError):
+    """Raised when an invalid vector operation is attempted"""
+    def __init__(self, operation: str, reason: str):
+        super().__init__(f"Invalid vector operation '{operation}': {reason}")
 
+class VectorNormalizationError(VectorError):
+    """Raised when vector normalization fails"""
+    def __init__(self, message, magnitude):
+        super().__init__(f"{message}, {magnitude}")
+
+class VectorAngleError(VectorError):
+    """Raised when angle calculation between vectors fails"""
+    def __init__(self, message, v1, v2):
+        super().__init__(message, v1, v2)
+
+class VectorIndexError(VectorError, IndexError):
+    """Raised when an invalid vector index is accessed"""
+    def __init__(self, index: int):
+        super().__init__(f"Vector index out of range: {index} (must be 0, 1, or 2)")
+
+class VectorDivisionError(VectorError, ZeroDivisionError):
+    """Raised when attempting to divide a vector by zero"""
+    def __init__(self):
+        super().__init__("Cannot divide vector by zero")
+
+class VectorTypeError(VectorError, TypeError):
+    """Raised when an operation is performed with incompatible types"""
+    def __init__(self, operation: str, expected_type: str, actual_type: str):
+        super().__init__(
+            f"Cannot perform '{operation}' between Vector and {actual_type}, "
+            f"expected {expected_type}"
+        )
+
+class VectorInputError(VectorError, ValueError):
+    """Raised when invalid input is provided for vector creation"""
+    def __init__(self, input_type: str, details: str):
+        super().__init__(f"Invalid {input_type} for vector creation: {details}")

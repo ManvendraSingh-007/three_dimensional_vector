@@ -1,10 +1,12 @@
 import math
 from functools import total_ordering
+from typing import Any
+from vector_errors import *
 
 @total_ordering
 class Vector:
     
-    def __init__(self, x: float, y: float, z: float) -> None:
+    def __init__(self, x: float = 0, y: float = 0, z: float = 0) -> None:
         """
         Initialize a Vector object with given x, y, and z coordinates.
 
@@ -135,43 +137,6 @@ class Vector:
         Vector: A new Vector object with x, y, and z components all set to one.
         """
         return cls(1, 1, 1) # Return a unit vector
-    
-    @classmethod
-    def from_coordinates(cls, x: float, y: float, z: float) -> 'Vector':
-        """
-        Create and return a new Vector object from given x, y, and z coordinates.
-
-        Parameters:
-        x (float): The x-coordinate of the vector.
-        y (float): The y-coordinate of the vector.
-        z (float): The z-coordinate of the vector.
-
-        Returns:
-        Vector: A new Vector object with the given coordinates.
-        """     
-        return cls(x, y, z) # Return a new vector with given coordinates
-    
-    @classmethod
-    def from_tuple(cls, coordinates: tuple) -> 'Vector':
-        """
-        Create a new Vector object from a tuple of coordinates.
-
-        This class method takes a tuple containing three float values (x, y, z) and creates a new Vector object with those coordinates.
-
-        Parameters:
-        coordinates (tuple): A tuple containing three float values representing the x, y, and z coordinates of the new Vector object.
-
-        Returns:
-        Vector: A new Vector object with the provided coordinates.
-
-        Raises:
-        ValueError: If the tuple does not contain exactly three elements.
-        """
-
-        if len(coordinates) == 3:
-            return cls(*coordinates) # Return a new vector from given tuple of coordinates
-        else:
-            raise ValueError("Coordinates must be a tuple of length 3")
 
     def magnitude(self) -> float:
         """
@@ -191,9 +156,10 @@ class Vector:
             self._magnitude = (self.x ** 2 + self.y ** 2 + self.z ** 2) ** 0.5
 
         return self._magnitude # Return magnitude
-        
-
     
+    def _check_instance(self, other: Any) -> bool:
+        return True if isinstance(other, Vector) else False
+        
     def cross_product(self, other: 'Vector') -> 'Vector':
         """
         Calculate the cross product of the current vector with another vector.
@@ -207,10 +173,11 @@ class Vector:
         Returns:
         Vector: A new vector that is the result of the cross product operation.
         """
-        x = self.y * other.z - self.z * other.y
-        y = self.z * other.x - self.x * other.z
-        z = self.x * other.y - self.y * other.x
-        return Vector(x, y, z)
+        if self._check_instance(other):
+            return Vector(self.y * other.z - self.z * other.y, self.z * other.x - self.x * other.z, self.x * other.y - self.y * other.x)
+        else:
+            raise VectorTypeError("Cross Product", __class__.__name__, other.__class__.__name__)
+        
 
     
     def dot_product(self, other: 'Vector') -> float:
@@ -226,7 +193,10 @@ class Vector:
         Returns:
         float: The dot product of the current vector and the other vector.
         """
-        return self.x * other.x + self.y * other.y + self.z * other.z
+        if self._check_instance(other):
+            return self.x * other.x + self.y * other.y + self.z * other.z
+        else:
+            raise VectorTypeError("Dot Product", __class__.__name__, other.__class__.__name__)
 
     
     def normalize(self) -> 'Vector':
@@ -243,10 +213,11 @@ class Vector:
         Vector: A new vector that is the normalized version of the original vector.
         """
         magnitude = self.magnitude()
-        try:
+        if magnitude <= 0:
+            raise VectorNormalizationError("Cannot normalize the vector", f"magnitude={magnitude}")
+        else:
             return Vector(self.x / magnitude, self.y / magnitude, self.z / magnitude)
-        except ZeroDivisionError:
-            raise ValueError("Cannot normalize a zero vector")
+        
 
     
     def angle_between(self, other: 'Vector', degrees: bool = True) -> float:
@@ -269,7 +240,7 @@ class Vector:
             theta = math.acos(cos_theta)
             return math.degrees(theta) if degrees else theta
         else:
-            raise ValueError("Cannot calculate angle between zero vectors")
+            raise VectorAngleError("Cannot calculate angle between Vector", self, other)
 
     
     def is_zero(self) -> bool:
@@ -320,23 +291,6 @@ class Vector:
         bool: True if the current vector is perpendicular to the other vector, False otherwise.
         """
         return self.dot_product(other) == 0
-
-    
-    def is_orthogonal(self, other: 'Vector') -> bool:
-        """
-        Check if the current vector is orthogonal to another vector.
-
-        This function calculates the cross product of the current vector and the other vector.
-        If the magnitude of the cross product is zero, it means the vectors are orthogonal to each other.
-        In this case, the function returns True. Otherwise, it returns False.
-
-        Parameters:
-        other (Vector): The other vector to compare with the current vector.
-
-        Returns:
-        bool: True if the current vector is orthogonal to the other vector, False otherwise.
-        """
-        return self.cross_product(other).magnitude() == 0
 
     
     def distance_to(self, other: 'Vector') -> float:
