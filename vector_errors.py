@@ -74,3 +74,8 @@ class VectorInputError(VectorError, ValueError):
     """Raised when invalid input is provided for vector creation"""
     def __init__(self, input_type: str, details: str):
         super().__init__(f"Invalid {input_type} for vector creation: {details}")
+
+class VectorInitializationError(VectorError):
+    """Raised during invalid Vector initilization"""
+    def __init__(self, operation: str):
+        super().__init__(f"Cannot initalize Vector, {operation}")
