@@ -425,7 +425,7 @@ class Vector:
         return self - self.project_onto(other) # Uses __sub__
 
     def reflect_across(self, normal: 'Vector') -> 'Vector':
-        """
+        r"""
         Calculate the reflection of this vector across a plane defined by a normal vector.
 
         Assumes 'normal' is the normal vector of the reflection plane/line.
