@@ -1,6 +1,6 @@
 import math
 from functools import total_ordering
-from typing import Any, Tuple, List, Union, Optional, overload
+from typing import Any, Tuple, List, Union, Optional, overload, Iterable, Sequence, Type, TypeVar
 import numpy as np
 from vector_errors import * # Default tolerance for floating-point comparisons
 DEFAULT_ATOL = 1e-8
@@ -718,3 +718,218 @@ class Vector:
     # --- Hashing ---
     # Vectors are mutable (setters, __setitem__), so they should not be hashable.
     __hash__ = None
+
+
+T = TypeVar('T')
+
+@total_ordering
+class DataVector(Sequence[T]):
+    """
+    A container for holding a fixed-length sequence of data of the same type.
+    Supports various operations, including element-wise operations where applicable.
+    """
+
+    __slots__ = ('_components', '_dtype')
+
+    def __init__(self, *args: T, dtype: Optional[Type[T]] = None) -> None:
+        """
+        Initialize a DataVector object.
+
+        Can be initialized in several ways:
+        - DataVector(x, y, z, ..., dtype=T): Creates a tuple from the given values.
+        - DataVector([x, y, z, ...], dtype=T): Creates a tuple from a list.
+        - DataVector((x, y, z, ...), dtype=T): Creates a tuple from a tuple.
+
+        Parameters:
+        *args: Arguments for initialization.
+        dtype (type, optional): The data type of the components. If None, it is inferred
+            from the first argument.  If args is empty, dtype defaults to None.
+
+        Raises:
+        VectorInitializationError: If arguments are invalid or incompatible.
+        VectorTypeError: If elements in args do not match the specified dtype.
+        """
+
+        if not args:
+            if dtype is None:
+                self._components: Tuple[T, ...] = tuple()
+                self._dtype = None
+            else:
+                self._components = tuple()
+                self._dtype = dtype
+
+        if dtype is None:
+            self._dtype = type(args[0])
+        else:
+            self._dtype = dtype
+
+        components: List[T] = []
+        for arg in args:
+            if not isinstance(arg, self._dtype):
+                raise VectorTypeError(
+                    f"Expected type {self._dtype}, got {type(arg).__name__}",
+                    "DataVector",
+                    type(arg).__name__,
+                )
+            components.append(arg)
+        self._components = tuple(components)
+
+    @property
+    def dtype(self) -> Optional[Type[T]]:
+        """Get the data type of the components."""
+        return self._dtype
+
+    def __len__(self) -> int:
+        """Return the number of components."""
+        return len(self._components)
+
+    def __getitem__(self, index: int) -> T:
+        """Get the component at the given index."""
+        return self._components[index]
+
+    def __setitem__(self, index: int, value: T) -> None:
+        """Set the component at the given index."""
+        if not isinstance(value, self._dtype):
+            raise VectorTypeError(
+                f"Expected type {self._dtype}, got {type(value).__name__}",
+                "DataVector",
+                type(value).__name__,
+            )
+        temp_list = list(self._components)
+        temp_list[index] = value
+        self._components = tuple(temp_list)
+
+    def __iter__(self) -> Iterable[T]:
+        """Return an iterator over the components."""
+        return iter(self._components)
+
+    def __repr__(self) -> str:
+        """Return the 'official' string representation."""
+        return f"DataVector({', '.join(repr(c) for c in self._components)}, dtype={self._dtype})"
+
+    def __str__(self) -> str:
+        """Return the 'informal' string representation."""
+        return str(self._components)
+
+    def __format__(self, format_spec: str) -> str:
+        """Support formatted output of components."""
+        formatted_components = [f"{c:{format_spec}}" for c in self._components]
+        return f"({', '.join(formatted_components)})"
+
+    def __eq__(self, other: object) -> bool:
+        """Equality check (self == other)."""
+        if not isinstance(other, DataVector):
+            return NotImplemented
+        if self._dtype != other._dtype:
+            return False  # Consider different dtypes as not equal
+        return self._components == other._components
+
+    def __lt__(self, other: 'DataVector') -> bool:
+        """Less than comparison (self < other).  Lexicographical comparison."""
+        if not isinstance(other, DataVector):
+            return NotImplemented
+        if self._dtype != other._dtype:
+            return NotImplemented  # Don't compare if types are different
+        return self._components < other._components
+
+    def __add__(self, other: 'DataVector') -> 'DataVector':
+        """Element-wise addition (or concatenation if applicable)."""
+        if not isinstance(other, DataVector):
+            return NotImplemented
+        if self._dtype != other._dtype:
+            raise VectorOperationError("Addition requires DataVectors of the same type.", self, other)
+        if len(self) != len(other):
+            raise VectorOperationError("Addition requires DataVectors of the same length.", self, other)
+
+        new_components: List[Any] = []
+        for i in range(len(self)):
+            try:
+                new_components.append(self[i] + other[i])
+            except TypeError:
+                new_components.append(str(self[i]) + str(other[i]))
+        return DataVector(*new_components, dtype=self._dtype)
+
+    def __sub__(self, other: 'DataVector') -> 'DataVector':
+        """Element-wise subtraction."""
+        if not isinstance(other, DataVector):
+            return NotImplemented
+        if self._dtype != other._dtype:
+            raise VectorOperationError("Subtraction requires DataVectors of the same type.", self, other)
+        if len(self) != len(other):
+            raise VectorOperationError("Subtraction requires DataVectors of the same length.", self, other)
+
+        new_components: List[Any] = []
+        for i in range(len(self)):
+            try:
+                new_components.append(self[i] - other[i])
+            except TypeError:
+                raise VectorOperationError(
+                    f"Subtraction not supported for type {self._dtype}", self, other
+                ) from None
+        return DataVector(*new_components, dtype=self._dtype)
+
+    def __mul__(self, scalar: Any) -> 'DataVector':
+        """Scalar multiplication (or repetition if applicable)."""
+        if not isinstance(scalar, (int, float, np.number)):
+            return NotImplemented
+
+        new_components: List[Any] = []
+        for component in self._components:
+            try:
+                new_components.append(component * scalar)
+            except TypeError:
+                new_components.append(str(component) * scalar)
+        return DataVector(*new_components, dtype=self._dtype)
+
+    def __rmul__(self, scalar: Any) -> 'DataVector':
+        """Reflected scalar multiplication."""
+        return self * scalar
+
+    def __truediv__(self, scalar: Any) -> 'DataVector':
+        """Scalar division."""
+        if not isinstance(scalar, (int, float, np.number)):
+            return NotImplemented
+        try:
+            scalar = float(scalar)  # Ensure float for division
+            new_components: List[Any] = [c / scalar for c in self._components]
+            return DataVector(*new_components, dtype=self._dtype)
+        except ZeroDivisionError:
+            raise ZeroDivisionError("Division by zero") from None
+        except TypeError:
+            raise VectorOperationError(
+                f"Division not supported for type {self._dtype}", self, scalar
+            ) from None
+
+    def sum(self) -> Any:
+        """
+        Calculate the sum of the components.
+
+        Returns:
+            Any: The sum of the components.
+
+        Raises:
+            TypeError: If the components do not support addition.
+        """
+        if not self._components:
+            return 0  # Or raise an error, depending on desired behavior for empty tuple
+        try:
+            return sum(self._components)
+        except TypeError:
+            raise VectorOperationError(f"Summation not supported for type {self._dtype}", self) from None
+
+    def mean(self) -> Any:
+        """
+        Calculate the mean (average) of the components.
+
+        Returns:
+            Any: The mean of the components.
+
+        Raises:
+            TypeError: If the components do not support addition and division.
+        """
+        if not self._components:
+            return 0  # Or raise an error
+        try:
+            return sum(self._components) / len(self._components)
+        except TypeError:
+            raise VectorOperationError(f"Mean calculation not supported for type {self._dtype}", self) from None
