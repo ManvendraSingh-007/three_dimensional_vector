@@ -23,6 +23,8 @@ Usage:
     specific to vector operations.
 """
 
+from typing import Any
+
 class VectorError(Exception):
     """Base class for all vector-related errors"""
     pass
@@ -79,3 +81,38 @@ class VectorInitializationError(VectorError):
     """Raised during invalid Vector initilization"""
     def __init__(self, operation: str):
         super().__init__(f"Cannot initalize Vector, {operation}")
+
+# --- random_provider_errors.py (simulated content) ---
+class RandomProviderError(Exception):
+    """Base class for exceptions in the RandomProvider."""
+    pass
+
+class EmptySequenceError(RandomProviderError, ValueError):
+    """Raised when an operation requires a non-empty sequence but an empty one is provided."""
+    def __init__(self, operation_name: str, message: str = "Input sequence cannot be empty."):
+        self.operation_name = operation_name
+        super().__init__(f"Error in {operation_name}: {message}")
+
+class InvalidProbabilityError(RandomProviderError, ValueError):
+    """Raised when a probability value is outside the valid range [0, 1]."""
+    def __init__(self, probability: float, message: str = "Probability must be between 0.0 and 1.0 inclusive."):
+        self.probability = probability
+        super().__init__(f"{message} Got: {probability}")
+
+class InvalidRangeError(RandomProviderError, ValueError):
+    """Raised when min_val is not less than or equal to max_val in a range."""
+    def __init__(self, min_val: Any, max_val: Any, message: str = "min_val must be less than or equal to max_val."):
+        self.min_val = min_val
+        self.max_val = max_val
+        super().__init__(f"{message} min_val: {min_val}, max_val: {max_val}")
+
+class InvalidLengthError(RandomProviderError, ValueError):
+    """Raised when a requested length is invalid (e.g., negative)."""
+    def __init__(self, length: int, message: str = "Length must be non-negative."):
+        self.length = length
+        super().__init__(f"{message} Got: {length}")
+
+class EmptyCharsetError(RandomProviderError, ValueError):
+    """Raised when the charset for random string generation is empty."""
+    def __init__(self, message: str = "Charset for random string generation cannot be empty."):
+        super().__init__(message)
