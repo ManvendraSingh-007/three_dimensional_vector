@@ -1,9 +1,11 @@
 import math
 from functools import total_ordering
-from typing import Any, Tuple, List, Union, Optional, overload, Iterable, Sequence, Type, TypeVar
+from typing import Any, Tuple, List, Union, Optional, overload, Iterable, Sequence, Type, TypeVar, MutableSequence
+import string
 import numpy as np
-from vector_errors import * # Default tolerance for floating-point comparisons
-DEFAULT_ATOL = 1e-8
+import random
+from vector_errors import * 
+DEFAULT_ATOL = 1e-8 # Default tolerance for floating-point comparisons
 
 @total_ordering
 class Vector:
@@ -933,3 +935,191 @@ class DataVector(Sequence[T]):
             return sum(self._components) / len(self._components)
         except TypeError:
             raise VectorOperationError(f"Mean calculation not supported for type {self._dtype}", self) from None
+        
+
+class RandomProvider:
+    """
+    Provides methods for generating various types of random data.
+    An instance of this class uses its own internal random number generator (RNG),
+    which can be seeded for reproducible results.
+    """
+    __slots__ = ('_rng', '_seed')
+
+    def __init__(self, seed: Optional[int] = None) -> None:
+        """
+        Initialize the RandomProvider.
+
+        Parameters:
+        seed (Optional[int]): An optional seed for the random number generator.
+                              If None, the RNG is initialized with a system-dependent
+                              source of randomness.
+        """
+        self._seed: Optional[int] = seed
+        self._rng: random.Random = random.Random(seed)
+
+    @property
+    def seed(self) -> Optional[int]:
+        """Get the initial seed used for the random number generator."""
+        return self._seed
+
+    def random_float(self, min_val: float = 0.0, max_val: float = 1.0) -> float:
+        """
+        Generate a random floating-point number N such that min_val <= N <= max_val.
+        If min_val > max_val, they will be swapped.
+
+        Parameters:
+        min_val (float): The minimum value for the random float (inclusive).
+        max_val (float): The maximum value for the random float (inclusive).
+
+        Returns:
+        float: A random float within the specified range.
+        """
+        if min_val > max_val:
+            min_val, max_val = max_val, min_val
+        return self._rng.uniform(min_val, max_val)
+
+    def random_int(self, min_val: int, max_val: int) -> int:
+        """
+        Generate a random integer N such that min_val <= N <= max_val.
+
+        Parameters:
+        min_val (int): The minimum value for the random integer (inclusive).
+        max_val (int): The maximum value for the random integer (inclusive).
+
+        Returns:
+        int: A random integer within the specified range.
+
+        Raises:
+        InvalidRangeError: If min_val > max_val.
+        """
+        if min_val > max_val:
+            raise InvalidRangeError(min_val, max_val, "For random_int, min_val cannot be greater than max_val.")
+        return self._rng.randint(min_val, max_val)
+
+    def choice(self, sequence: Sequence[T]) -> T:
+        """
+        Return a random element from a non-empty sequence.
+
+        Parameters:
+        sequence (Sequence[T]): The sequence to choose from.
+
+        Returns:
+        T: A randomly selected element from the sequence.
+
+        Raises:
+        EmptySequenceError: If the sequence is empty.
+        """
+        if not sequence:
+            raise EmptySequenceError(operation_name="choice")
+        return self._rng.choice(sequence)
+
+    def sample(self, population: Sequence[T], k: int) -> List[T]:
+        """
+        Return a k-length list of unique elements chosen from the population sequence.
+        Used for random sampling without replacement.
+
+        Parameters:
+        population (Sequence[T]): The sequence to sample from.
+        k (int): The number of unique elements to sample.
+
+        Returns:
+        List[T]: A list of k unique elements from the population.
+
+        Raises:
+        ValueError: If k is negative or greater than the population size.
+                    (This is standard behavior from random.sample)
+        EmptySequenceError: If the population is empty and k > 0.
+        """
+        if k > 0 and not population:
+            raise EmptySequenceError(operation_name="sample", message="Cannot sample from an empty population.")
+        try:
+            return self._rng.sample(population, k)
+        except ValueError as e: # Catch errors from random.sample (e.g. k > len(population))
+            raise RandomProviderError(f"Error in sample: {e}") from e
+
+
+    def shuffle(self, x: MutableSequence[Any]) -> None:
+        """
+        Shuffle the sequence x in place.
+
+        Parameters:
+        x (MutableSequence[Any]): The mutable sequence to be shuffled.
+                                 Note: The sequence is modified directly.
+        """
+        self._rng.shuffle(x)
+
+    def random_string(self, length: int, charset: Optional[str] = None) -> str:
+        """
+        Generate a random string of a specified length from a given charset.
+
+        Parameters:
+        length (int): The desired length of the random string.
+        charset (Optional[str]): The characters to choose from.
+                                 If None, defaults to ASCII letters (both cases) and digits.
+
+        Returns:
+        str: A random string.
+
+        Raises:
+        InvalidLengthError: If length is negative.
+        EmptyCharsetError: If the provided charset is empty.
+        """
+        if length < 0:
+            raise InvalidLengthError(length, "String length cannot be negative.")
+        if length == 0:
+            return ""
+
+        if charset is None:
+            charset = string.ascii_letters + string.digits
+        
+        if not charset:
+            raise EmptyCharsetError()
+
+        return ''.join(self._rng.choice(charset) for _ in range(length))
+
+    def random_boolean(self, probability_true: float = 0.5) -> bool:
+        """
+        Return a random boolean value (True or False).
+
+        Parameters:
+        probability_true (float): The probability that True is returned. Must be between 0.0 and 1.0.
+
+        Returns:
+        bool: True or False, based on the given probability.
+
+        Raises:
+        InvalidProbabilityError: If probability_true is outside the [0, 1] range.
+        """
+        if not (0.0 <= probability_true <= 1.0):
+            raise InvalidProbabilityError(probability_true)
+        return self._rng.random() < probability_true
+
+
+    def generate_random_vector(self, min_coord: float = -10.0, max_coord: float = 10.0) -> Any: # Should be 'Vector' if Vector class is imported
+        """
+        Generate a random 3D Vector with coordinates within the specified range.
+
+        Parameters:
+        min_coord (float): The minimum value for each coordinate.
+        max_coord (float): The maximum value for each coordinate.
+
+        Returns:
+        Vector: A new Vector instance with random x, y, z components.
+        """
+
+        x = self.random_float(min_coord, max_coord)
+        y = self.random_float(min_coord, max_coord)
+        z = self.random_float(min_coord, max_coord)
+        return Vector(x, y, z) #
+
+    def __repr__(self) -> str:
+        """Return the 'official' string representation of the RandomProvider."""
+        return f"RandomProvider(seed={self._seed})"
+
+    def __str__(self) -> str:
+        """Return an 'informal' string representation of the RandomProvider."""
+        status = f"seeded with {self._seed}" if self._seed is not None else "unseeded"
+        return f"<RandomProvider object, {status}>"
+
+    # RandomProvider instances are mutable (internal RNG state changes), so they should not be hashable.
+    __hash__ = None 
